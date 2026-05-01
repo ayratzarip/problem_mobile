@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 AppSpacing.screenPadding,
                 8,
                 AppSpacing.screenPadding,
-                120,
+                AppSpacing.listBottomPaddingDoubleCta,
               ),
               children: [
                 Text(

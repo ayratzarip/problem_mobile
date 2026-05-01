@@ -204,6 +204,8 @@ void main() {
     final nextButton = find.widgetWithText(FilledButton, 'Далее');
     expect(tester.widget<FilledButton>(nextButton).onPressed, isNull);
 
+    await tester.ensureVisible(find.text('Подсказка'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Подсказка'));
     await tester.pumpAndSettle();
     expect(find.text('Совет'), findsOneWidget);

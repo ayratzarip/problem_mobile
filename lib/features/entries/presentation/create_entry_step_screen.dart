@@ -121,11 +121,12 @@ class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
         title: 'Шаг ${step.number}',
         leading: BackButton(onPressed: _handleBack),
         body: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenPadding,
             12,
             AppSpacing.screenPadding,
-            120,
+            AppSpacing.listBottomPaddingSingleCta,
           ),
           children: [
             StepProgress(currentStep: step.number),

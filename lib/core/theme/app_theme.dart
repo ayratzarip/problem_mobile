@@ -25,6 +25,12 @@ abstract final class AppSpacing {
   static const double cardRadius = 14;
   static const double controlRadius = 12;
   static const double bottomButtonHeight = 52;
+
+  /// Нижний отступ у `ListView` над одной фиксированной CTA + safe area.
+  static const double listBottomPaddingSingleCta = 144;
+
+  /// Нижний отступ при двух кнопках в колонке (главный экран).
+  static const double listBottomPaddingDoubleCta = 176;
 }
 
 ThemeData buildAppTheme() {
@@ -44,14 +50,14 @@ ThemeData buildAppTheme() {
       outline: AppColors.borderLight,
     ),
     scaffoldBackgroundColor: AppColors.backgroundLight,
-    fontFamily: 'SF Pro Display',
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       centerTitle: true,
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.backgroundLight,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleTextStyle: TextStyle(
+      titleTextStyle: const TextStyle(
         color: AppColors.textPrimary,
         fontSize: 18,
         fontWeight: FontWeight.w700,
@@ -158,9 +164,9 @@ ThemeData buildAppDarkTheme() {
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.darkBackground,
-    fontFamily: 'SF Pro Display',
     appBarTheme: AppBarTheme(
       centerTitle: true,
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.darkBackground,
       foregroundColor: scheme.onSurface,
       elevation: 0,

@@ -33,11 +33,12 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
     return AppScaffold(
       title: 'Инструкции',
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screenPadding,
           12,
           AppSpacing.screenPadding,
-          120,
+          AppSpacing.listBottomPaddingSingleCta,
         ),
         children: [
           SearchField(

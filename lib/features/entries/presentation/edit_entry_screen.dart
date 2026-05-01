@@ -76,11 +76,12 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
         title: 'Редактирование',
         leading: BackButton(onPressed: _handleBack),
         body: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenPadding,
             16,
             AppSpacing.screenPadding,
-            120,
+            AppSpacing.listBottomPaddingSingleCta,
           ),
           children: [
             if (state.editingEntryId == null)

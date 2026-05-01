@@ -23,7 +23,7 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset ?? true,
       appBar: title == null && leading == null && actions == null
           ? null
           : AppBar(
@@ -50,7 +50,7 @@ class AppScaffold extends StatelessWidget {
               child: SafeArea(
                 minimum: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
-                  12,
+                  32,
                   AppSpacing.screenPadding,
                   14,
                 ),

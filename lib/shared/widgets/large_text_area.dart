@@ -22,22 +22,37 @@ class LargeTextArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      minLines: minLines,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontWeight: FontWeight.w400,
+    final scheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: TextField(
+        controller: controller,
+        minLines: minLines,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          alignLabelWithHint: true,
+          labelText: label.toUpperCase(),
+          hintText: hintText,
+          filled: true,
+          fillColor: Colors.transparent,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        ),
+        onChanged: onChanged,
       ),
-      textCapitalization: TextCapitalization.sentences,
-      decoration: InputDecoration(
-        alignLabelWithHint: true,
-        labelText: label.toUpperCase(),
-        hintText: hintText,
-      ),
-      onChanged: onChanged,
     );
   }
 }
