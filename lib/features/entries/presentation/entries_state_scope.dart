@@ -10,8 +10,8 @@ class EntriesStateScope extends InheritedNotifier<EntriesAppState> {
   }) : super(notifier: state);
 
   static EntriesAppState of(BuildContext context) {
-    final scope =
-        context.dependOnInheritedWidgetOfExactType<EntriesStateScope>();
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<EntriesStateScope>();
     assert(scope != null, 'EntriesStateScope не найден в дереве виджетов');
     return scope!.notifier!;
   }

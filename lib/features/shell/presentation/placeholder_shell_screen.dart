@@ -11,9 +11,7 @@ class PlaceholderShellScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Problem?'),
-      ),
+      appBar: AppBar(title: const Text('Problem?')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

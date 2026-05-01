@@ -103,9 +103,11 @@ class ProblemEntry {
       tags: (json['tags'] as List<dynamic>? ?? const [])
           .whereType<String>()
           .toList(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );
   }

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/navigation/app_routes.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/app_scaffold.dart';
+import '../../../shared/widgets/bottom_primary_button.dart';
+import '../../../shared/widgets/hint_button.dart';
+import '../../../shared/widgets/large_text_area.dart';
+import '../../../shared/widgets/step_progress.dart';
 import 'entries_state_scope.dart';
 
 enum CreateEntryStep {
@@ -55,10 +62,7 @@ enum CreateEntryStep {
 }
 
 class CreateEntryStepScreen extends StatefulWidget {
-  const CreateEntryStepScreen({
-    required this.step,
-    super.key,
-  });
+  const CreateEntryStepScreen({required this.step, super.key});
 
   final CreateEntryStep step;
 
@@ -68,6 +72,8 @@ class CreateEntryStepScreen extends StatefulWidget {
 
 class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
   late final TextEditingController _controller;
+  bool _isSaving = false;
+  bool _isConfirmedCanceling = false;
 
   @override
   void initState() {
@@ -78,7 +84,10 @@ class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _controller.text = _valueForStep();
+    final value = _valueForStep();
+    if (_controller.text != value) {
+      _controller.text = value;
+    }
   }
 
   @override
@@ -93,44 +102,75 @@ class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
     final isFirstStep = step == CreateEntryStep.situation;
     final canContinue = !isFirstStep || _controller.text.trim().isNotEmpty;
 
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      canPop: _isConfirmedCanceling || !_shouldConfirmCancel(),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) {
+          return;
+        }
+        final shouldCancel = await _confirmCancelCreation();
+        if (shouldCancel && context.mounted) {
+          setState(() => _isConfirmedCanceling = true);
+          EntriesStateScope.of(context).resetDraft();
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        }
+      },
+      child: AppScaffold(
+        title: 'Шаг ${step.number}',
         leading: BackButton(onPressed: _handleBack),
-        title: Text('Шаг ${step.number}'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          LinearProgressIndicator(value: step.number / 5),
-          const SizedBox(height: 24),
-          Text(
-            step.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            12,
+            AppSpacing.screenPadding,
+            120,
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            minLines: 6,
-            maxLines: 10,
-            decoration: InputDecoration(
-              alignLabelWithHint: true,
-              border: const OutlineInputBorder(),
-              labelText: step.fieldLabel,
+          children: [
+            StepProgress(currentStep: step.number),
+            const SizedBox(height: 26),
+            Text(
+              step.title,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
-            onChanged: (value) {
-              _saveValue(value);
-              setState(() {});
-            },
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(16),
-        child: FilledButton(
-          onPressed: canContinue ? _handleNext : null,
-          child: Text(step.nextRoute == null ? 'Завершить анализ' : 'Далее'),
+            const SizedBox(height: 12),
+            Text(
+              _descriptionForStep(step),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 26),
+            LargeTextArea(
+              controller: _controller,
+              label: 'Описание',
+              hintText: _placeholderForStep(step),
+              maxLength: step == CreateEntryStep.thoughts ? 1000 : null,
+              onChanged: (value) {
+                _saveValue(value);
+                setState(() {});
+              },
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerRight,
+              child: HintButton(onPressed: _showHint),
+            ),
+          ],
+        ),
+        bottomBar: BottomPrimaryButton(
+          label: _isSaving
+              ? 'Сохранение...'
+              : step.nextRoute == null
+              ? 'Завершить анализ'
+              : 'Далее',
+          icon: step.nextRoute == null
+              ? Icons.check_circle_outline
+              : Icons.arrow_forward,
+          onPressed: canContinue && !_isSaving ? _handleNext : null,
         ),
       ),
     );
@@ -153,7 +193,7 @@ class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
       case CreateEntryStep.situation:
         state.updateDraft(situation: value);
       case CreateEntryStep.thoughts:
-        state.updateDraft(thoughts: value);
+        state.updateDraft(thoughts: value.characters.take(1000).toString());
       case CreateEntryStep.body:
         state.updateDraft(bodyFeelings: value);
       case CreateEntryStep.consequences:
@@ -164,23 +204,225 @@ class _CreateEntryStepScreenState extends State<CreateEntryStepScreen> {
   }
 
   Future<void> _handleNext() async {
+    HapticFeedback.lightImpact();
     final nextRoute = widget.step.nextRoute;
     if (nextRoute != null) {
       await Navigator.of(context).pushNamed(nextRoute);
       return;
     }
 
-    await EntriesStateScope.of(context).saveDraftAsEntry();
-    if (!mounted) {
+    if (_isSaving) {
       return;
     }
-    Navigator.of(context).popUntil(ModalRoute.withName(AppRoutes.home));
+    setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      await EntriesStateScope.of(context).saveDraftAsEntry();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Запись успешно сохранена')));
+      Navigator.of(context).popUntil(ModalRoute.withName(AppRoutes.home));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось сохранить запись')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
-  void _handleBack() {
-    if (widget.step == CreateEntryStep.situation) {
+  Future<void> _handleBack() async {
+    HapticFeedback.lightImpact();
+    if (_shouldConfirmCancel()) {
+      final shouldCancel = await _confirmCancelCreation();
+      if (!shouldCancel || !mounted) {
+        return;
+      }
+      setState(() => _isConfirmedCanceling = true);
       EntriesStateScope.of(context).resetDraft();
     }
-    Navigator.of(context).maybePop();
+    if (mounted) {
+      if (_isConfirmedCanceling) {
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+      } else {
+        Navigator.of(context).maybePop();
+      }
+    }
   }
+
+  bool _shouldConfirmCancel() {
+    return widget.step == CreateEntryStep.situation &&
+        EntriesStateScope.of(context).hasDraftChanges;
+  }
+
+  Future<bool> _confirmCancelCreation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Отменить создание записи?'),
+        content: const Text('Заполненный черновик будет потерян.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Продолжить'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Отменить'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  void _showHint() {
+    HapticFeedback.lightImpact();
+    final hint = _hintForStep(widget.step);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hint.title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  hint.content,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                if (hint.bullets.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  for (final bullet in hint.bullets)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        '• $bullet',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Понятно'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+String _descriptionForStep(CreateEntryStep step) {
+  return switch (step) {
+    CreateEntryStep.situation =>
+      'Опишите факты. Это может быть ситуация, когда вы хотите что-то начать, но не можете, или вам стало плохо просто сидя дома за смартфоном.',
+    CreateEntryStep.thoughts =>
+      'Постарайтесь быть честными с собой. Запишите всё, что приходит в голову.',
+    CreateEntryStep.body =>
+      'Оцените тонус мышц тела и лица, затем прислушайтесь к ощущениям внутри. Эмоции всегда отражаются в мышечном тонусе.',
+    CreateEntryStep.consequences =>
+      'Помеха — это потеря времени или препятствие к действию.',
+    CreateEntryStep.withoutProblem =>
+      'Представьте, что проблемы нет. Что бы вы делали?',
+  };
+}
+
+String _placeholderForStep(CreateEntryStep step) {
+  return switch (step) {
+    CreateEntryStep.situation =>
+      'Например: Начальник громко сказал, что отчет не готов, и бросил папку на стол...',
+    CreateEntryStep.thoughts => 'Я думаю, что...',
+    CreateEntryStep.body =>
+      'Например: ком в горле, давящее чувство в груди, жар на лице, дрожь в руках...',
+    CreateEntryStep.consequences =>
+      'Например: я избегаю встреч с друзьями, я плохо сплю, я срываюсь на близких. Я чувствую постоянное напряжение в плечах...',
+    CreateEntryStep.withoutProblem =>
+      'Я бы чувствовал себя легче, занялся бы...',
+  };
+}
+
+_StepHint _hintForStep(CreateEntryStep step) {
+  return switch (step) {
+    CreateEntryStep.situation => const _StepHint(
+      title: 'Совет',
+      content:
+          'Опишите внешние обстоятельства. Например: "Сижу на диване, смотрю в телефон, нужно встать и пойти готовить, но не могу".',
+    ),
+    CreateEntryStep.thoughts => const _StepHint(
+      title: 'Как описать мысли?',
+      content: 'Если трудно осознать мысли:',
+      bullets: [
+        'Представьте, что объясняете другу причину своего состояния.',
+        'Представьте себя героем комикса — что написано в "облачке" над вашей головой?',
+      ],
+    ),
+    CreateEntryStep.body => const _StepHint(
+      title: 'Как описать ощущения?',
+      content:
+          'Обратите внимание на напряжение в плечах, челюсти, лбу. Сжаты ли кулаки? Как дышится? Эмоции живут в теле.',
+      bullets: [
+        'Тонус (напряжение, расслабление)',
+        'Текстура (колючее, мягкое)',
+        'Движение (пульсация, вибрация)',
+        'Вес (тяжесть, легкость)',
+      ],
+    ),
+    CreateEntryStep.consequences => const _StepHint(
+      title: 'Примеры заполнения',
+      content: 'Можно описывать конкретные помехи:',
+      bullets: [
+        'Потерял 2 часа на тревогу',
+        'Хотел пойти на встречу, но остался дома',
+        'Не смог сосредоточиться на работе',
+        'Сорвался на близких вместо разговора',
+      ],
+    ),
+    CreateEntryStep.withoutProblem => const _StepHint(
+      title: 'Пример',
+      content:
+          '"Если бы я не тревожился эти два часа, я бы почитал книгу или спокойно погулял".',
+    ),
+  };
+}
+
+class _StepHint {
+  const _StepHint({
+    required this.title,
+    required this.content,
+    this.bullets = const [],
+  });
+
+  final String title;
+  final String content;
+  final List<String> bullets;
 }

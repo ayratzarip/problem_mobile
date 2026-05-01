@@ -43,28 +43,31 @@ void main() {
     expect(entries.first.id, 'fixed-id');
   });
 
-  test('updateEntry обновляет запись и сохраняет исходную дату создания', () async {
-    final repository = createRepository();
-    final original = await repository.addEntry(
-      const EntryDraft(situation: 'Старая ситуация'),
-    );
+  test(
+    'updateEntry обновляет запись и сохраняет исходную дату создания',
+    () async {
+      final repository = createRepository();
+      final original = await repository.addEntry(
+        const EntryDraft(situation: 'Старая ситуация'),
+      );
 
-    now = DateTime.parse('2026-05-01T11:00:00.000Z');
-    final updated = await repository.updateEntry(
-      original.id,
-      const EntryDraft(
-        situation: 'Новая ситуация',
-        consequences: 'Потерял время на тревогу',
-      ),
-    );
+      now = DateTime.parse('2026-05-01T11:00:00.000Z');
+      final updated = await repository.updateEntry(
+        original.id,
+        const EntryDraft(
+          situation: 'Новая ситуация',
+          consequences: 'Потерял время на тревогу',
+        ),
+      );
 
-    expect(updated, isNotNull);
-    expect(updated!.situation, 'Новая ситуация');
-    expect(updated.title, 'Новая ситуация');
-    expect(updated.tags, ['Тревога']);
-    expect(updated.createdAt, original.createdAt);
-    expect(updated.updatedAt, now);
-  });
+      expect(updated, isNotNull);
+      expect(updated!.situation, 'Новая ситуация');
+      expect(updated.title, 'Новая ситуация');
+      expect(updated.tags, ['Тревога']);
+      expect(updated.createdAt, original.createdAt);
+      expect(updated.updatedAt, now);
+    },
+  );
 
   test('updateEntry может изменить дату создания', () async {
     final repository = createRepository();

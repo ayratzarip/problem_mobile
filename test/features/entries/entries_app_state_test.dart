@@ -19,9 +19,7 @@ void main() {
   });
 
   test('loadEntries загружает записи из репозитория', () async {
-    repository.entries = [
-      _entry(id: '1', situation: 'Ситуация'),
-    ];
+    repository.entries = [_entry(id: '1', situation: 'Ситуация')];
 
     await state.loadEntries();
 
@@ -41,9 +39,7 @@ void main() {
   });
 
   test('loadEntryForEditing и updateEditingEntry обновляют запись', () async {
-    repository.entries = [
-      _entry(id: '1', situation: 'Старая ситуация'),
-    ];
+    repository.entries = [_entry(id: '1', situation: 'Старая ситуация')];
     await state.loadEntries();
 
     final loaded = state.loadEntryForEditing('1');
@@ -57,19 +53,20 @@ void main() {
     expect(state.entries.single.situation, 'Новая ситуация');
   });
 
-  test('deleteEntry удаляет запись и сбрасывает редактирование этой записи', () async {
-    repository.entries = [
-      _entry(id: '1', situation: 'Ситуация'),
-    ];
-    await state.loadEntries();
-    state.loadEntryForEditing('1');
+  test(
+    'deleteEntry удаляет запись и сбрасывает редактирование этой записи',
+    () async {
+      repository.entries = [_entry(id: '1', situation: 'Ситуация')];
+      await state.loadEntries();
+      state.loadEntryForEditing('1');
 
-    await state.deleteEntry('1');
+      await state.deleteEntry('1');
 
-    expect(state.entries, isEmpty);
-    expect(state.editingEntryId, isNull);
-    expect(state.draft.isEmpty, isTrue);
-  });
+      expect(state.entries, isEmpty);
+      expect(state.editingEntryId, isNull);
+      expect(state.draft.isEmpty, isTrue);
+    },
+  );
 }
 
 class _MemoryEntriesRepository implements EntriesRepository {

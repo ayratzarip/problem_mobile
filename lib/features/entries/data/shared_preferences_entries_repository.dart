@@ -19,10 +19,10 @@ class SharedPreferencesEntriesRepository implements EntriesRepository {
     String storageKey = entriesStorageKey,
     DateTimeProvider? now,
     EntryIdGenerator? idGenerator,
-  })  : _preferences = preferences,
-        _storageKey = storageKey,
-        _now = now ?? DateTime.now,
-        _idGenerator = idGenerator ?? _generateId;
+  }) : _preferences = preferences,
+       _storageKey = storageKey,
+       _now = now ?? DateTime.now,
+       _idGenerator = idGenerator ?? _generateId;
 
   SharedPreferences? _preferences;
   final String _storageKey;
@@ -99,7 +99,9 @@ class SharedPreferencesEntriesRepository implements EntriesRepository {
 
       return decoded
           .whereType<Map>()
-          .map((entry) => ProblemEntry.fromJson(Map<String, Object?>.from(entry)))
+          .map(
+            (entry) => ProblemEntry.fromJson(Map<String, Object?>.from(entry)),
+          )
           .toList();
     } on FormatException {
       return [];

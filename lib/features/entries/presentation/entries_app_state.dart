@@ -6,7 +6,7 @@ import '../domain/problem_entry.dart';
 
 class EntriesAppState extends ChangeNotifier {
   EntriesAppState({required EntriesRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final EntriesRepository _repository;
 

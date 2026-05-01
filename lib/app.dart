@@ -12,10 +12,7 @@ import 'features/entries/presentation/home_screen.dart';
 import 'features/instructions/presentation/instructions_screen.dart';
 
 class ProblemApp extends StatefulWidget {
-  const ProblemApp({
-    super.key,
-    this.repository,
-  });
+  const ProblemApp({super.key, this.repository});
 
   final EntriesRepository? repository;
 
@@ -49,6 +46,8 @@ class _ProblemAppState extends State<ProblemApp> {
         title: 'Problem?',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
+        darkTheme: buildAppDarkTheme(),
+        themeMode: ThemeMode.system,
         initialRoute: AppRoutes.home,
         onGenerateRoute: _onGenerateRoute,
       ),
@@ -60,29 +59,27 @@ class _ProblemAppState extends State<ProblemApp> {
     final screen = switch (routeName) {
       AppRoutes.home => const HomeScreen(),
       AppRoutes.createSituation => const CreateEntryStepScreen(
-          step: CreateEntryStep.situation,
-        ),
+        step: CreateEntryStep.situation,
+      ),
       AppRoutes.createThoughts => const CreateEntryStepScreen(
-          step: CreateEntryStep.thoughts,
-        ),
+        step: CreateEntryStep.thoughts,
+      ),
       AppRoutes.createBody => const CreateEntryStepScreen(
-          step: CreateEntryStep.body,
-        ),
+        step: CreateEntryStep.body,
+      ),
       AppRoutes.createConsequences => const CreateEntryStepScreen(
-          step: CreateEntryStep.consequences,
-        ),
+        step: CreateEntryStep.consequences,
+      ),
       AppRoutes.createWithoutProblem => const CreateEntryStepScreen(
-          step: CreateEntryStep.withoutProblem,
-        ),
+        step: CreateEntryStep.withoutProblem,
+      ),
       AppRoutes.instructions => const InstructionsScreen(),
-      _ when routeName.startsWith('${AppRoutes.editEntry}/') =>
-        EditEntryScreen(entryId: routeName.substring(AppRoutes.editEntry.length + 1)),
+      _ when routeName.startsWith('${AppRoutes.editEntry}/') => EditEntryScreen(
+        entryId: routeName.substring(AppRoutes.editEntry.length + 1),
+      ),
       _ => const HomeScreen(),
     };
 
-    return MaterialPageRoute<void>(
-      builder: (_) => screen,
-      settings: settings,
-    );
+    return MaterialPageRoute<void>(builder: (_) => screen, settings: settings);
   }
 }
