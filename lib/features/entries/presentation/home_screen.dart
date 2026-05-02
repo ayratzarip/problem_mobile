@@ -31,8 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return entry.title.toLowerCase().contains(query) ||
           entry.situation.toLowerCase().contains(query) ||
-          entry.thoughts.toLowerCase().contains(query) ||
-          entry.tags.any((tag) => tag.toLowerCase().contains(query));
+          entry.thoughts.toLowerCase().contains(query);
     }).toList();
     final groupedEntries = groupEntriesByDate(filteredEntries);
 
@@ -73,20 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   const _NothingFoundMessage()
                 else
                   for (final group in groupedEntries) ...[
-                    _DateDivider(label: group.dateLabel),
-                    for (final entry in group.entries) ...[
-                      EntryCard(
-                        entry: entry,
-                        onDelete: () => _confirmDeleteEntry(entry.id),
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.of(
-                            context,
-                          ).pushNamed(AppRoutes.editEntryPath(entry.id));
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                    _EntryDateGroup(
+                      group: group,
+                      onDelete: _confirmDeleteEntry,
+                      onTap: _openEntry,
+                    ),
+                    const SizedBox(height: 16),
                   ],
               ],
             ),
@@ -111,6 +102,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openEntry(String id) {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).pushNamed(AppRoutes.editEntryPath(id));
+  }
+
   Future<void> _confirmDeleteEntry(String id) async {
     HapticFeedback.mediumImpact();
     final state = EntriesStateScope.of(context);
@@ -126,6 +122,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Удалить'),
           ),
         ],
@@ -182,6 +181,60 @@ class _HomeScreenState extends State<HomeScreen> {
           'Запрос скопирован в буфер обмена! Вставьте его в чат с AI.',
         ),
       ),
+    );
+  }
+}
+
+class _EntryDateGroup extends StatelessWidget {
+  const _EntryDateGroup({
+    required this.group,
+    required this.onDelete,
+    required this.onTap,
+  });
+
+  final GroupedEntries group;
+  final ValueChanged<String> onDelete;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _DateDivider(label: group.dateLabel),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var index = 0; index < group.entries.length; index++) ...[
+                EntryCard(
+                  entry: group.entries[index],
+                  useCard: false,
+                  borderRadius: _itemBorderRadius(index, group.entries.length),
+                  onDelete: () => onDelete(group.entries[index].id),
+                  onTap: () => onTap(group.entries[index].id),
+                ),
+                if (index != group.entries.length - 1)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 16,
+                    endIndent: 16,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  BorderRadius _itemBorderRadius(int index, int length) {
+    const radius = Radius.circular(AppSpacing.cardRadius);
+    return BorderRadius.vertical(
+      top: index == 0 ? radius : Radius.zero,
+      bottom: index == length - 1 ? radius : Radius.zero,
     );
   }
 }

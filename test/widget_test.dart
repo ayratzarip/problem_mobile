@@ -125,8 +125,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('СЕГОДНЯ'), findsOneWidget);
-      expect(find.text('Собираюсь сесть за JS'), findsWidgets);
-      expect(find.text('Работа'), findsOneWidget);
+      expect(find.text('Собираюсь сесть за JS'), findsOneWidget);
+      expect(find.text('Работа'), findsNothing);
       expect(find.text('Скопировать для AI'), findsOneWidget);
 
       await tester.enterText(find.byType(EditableText).first, 'ничего');
@@ -141,7 +141,7 @@ void main() {
 
       await tester.tap(find.text('Отмена'));
       await tester.pumpAndSettle();
-      expect(find.text('Собираюсь сесть за JS'), findsWidgets);
+      expect(find.text('Собираюсь сесть за JS'), findsOneWidget);
     },
   );
 
@@ -290,9 +290,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Мои Записи'), findsOneWidget);
-    expect(find.text('Работа вызывает тревогу'), findsWidgets);
-    expect(find.text('Работа'), findsOneWidget);
-    expect(find.text('Тревога'), findsOneWidget);
+    expect(find.text('Работа вызывает тревогу'), findsOneWidget);
+    expect(find.text('Работа'), findsNothing);
+    expect(find.text('Тревога'), findsNothing);
   });
 
   testWidgets(

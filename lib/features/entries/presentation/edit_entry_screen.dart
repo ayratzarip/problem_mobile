@@ -284,56 +284,45 @@ class _EditForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        border: Border.all(color: scheme.outlineVariant),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        child: Column(
-          children: [
-            _DateTimeSection(value: createdAt, onTap: onPickDateTime),
-            _EditTextSection(
-              label: 'Ситуация',
-              controller: situationController,
-              hintText: 'Опишите факты. Что происходит?..',
-              onChanged: onChanged,
-            ),
-            _EditTextSection(
-              label: 'Мысли',
-              controller: thoughtsController,
-              hintText: 'О чем думаете...',
-              onChanged: onChanged,
-            ),
-            _EditTextSection(
-              label: 'Телесные ощущения',
-              controller: bodyFeelingsController,
-              hintText: 'Ощущения в теле, тонус мышц...',
-              onChanged: onChanged,
-            ),
-            if (bodyZones.isNotEmpty)
-              _ReadOnlySection(
-                label: 'Части тела',
-                value: bodyZones.join(', '),
-              ),
-            _EditTextSection(
-              label: 'Последствия',
-              controller: consequencesController,
-              hintText: 'Потеря времени или препятствие к действию...',
-              onChanged: onChanged,
-            ),
-            _EditTextSection(
-              label: 'Без проблемы',
-              controller: withoutProblemController,
-              hintText: 'Что бы вы делали, если бы не эта проблема...',
-              onChanged: onChanged,
-              isLast: true,
-            ),
-          ],
-        ),
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _DateTimeSection(value: createdAt, onTap: onPickDateTime),
+          _EditTextSection(
+            label: 'Ситуация',
+            controller: situationController,
+            hintText: 'Опишите факты. Что происходит?..',
+            onChanged: onChanged,
+          ),
+          _EditTextSection(
+            label: 'Мысли',
+            controller: thoughtsController,
+            hintText: 'О чем думаете...',
+            onChanged: onChanged,
+          ),
+          _EditTextSection(
+            label: 'Телесные ощущения',
+            controller: bodyFeelingsController,
+            hintText: 'Ощущения в теле, тонус мышц...',
+            onChanged: onChanged,
+          ),
+          if (bodyZones.isNotEmpty)
+            _ReadOnlySection(label: 'Части тела', value: bodyZones.join(', ')),
+          _EditTextSection(
+            label: 'Последствия',
+            controller: consequencesController,
+            hintText: 'Потеря времени или препятствие к действию...',
+            onChanged: onChanged,
+          ),
+          _EditTextSection(
+            label: 'Без проблемы',
+            controller: withoutProblemController,
+            hintText: 'Что бы вы делали, если бы не эта проблема...',
+            onChanged: onChanged,
+            isLast: true,
+          ),
+        ],
       ),
     );
   }
